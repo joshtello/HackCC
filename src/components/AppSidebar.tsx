@@ -1,10 +1,11 @@
 import { 
   LayoutDashboard, 
-  Package, 
-  UtensilsCrossed, 
+  Package,
+  UtensilsCrossed,
   TrendingUp,
   Settings,
-  ChefHat
+  ChefHat,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -26,6 +27,7 @@ const menuItems = [
   { title: "Menu", url: "/menu", icon: UtensilsCrossed },
   { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
+  { title: "Simple Orders", url: "/simple", icon: ClipboardList },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 

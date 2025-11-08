@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Menu from "./pages/Menu";
 import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
+import Simple from "./pages/Simple";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/simple" element={<Simple />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
