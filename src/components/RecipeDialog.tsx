@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { AddIngredientDialog } from "@/components/AddIngredientDialog";
 
 type RecipeDialogProps = {
   menuItem: {
@@ -59,6 +60,7 @@ export function RecipeDialog({ menuItem, open, onOpenChange }: RecipeDialogProps
 
   const [rows, setRows] = useState<RecipeIngredientRow[]>([createEmptyRow()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false);
 
   const ingredientLookup = useMemo(() => {
     return new Map((ingredients || []).map((item) => [item.id, item]));
@@ -236,6 +238,19 @@ export function RecipeDialog({ menuItem, open, onOpenChange }: RecipeDialogProps
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-muted-foreground/20 bg-secondary/20 p-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">Missing an ingredient?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add it to your inventory without leaving this page.
+                  </p>
+                </div>
+                <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setIsAddIngredientOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  New Ingredient
+                </Button>
+              </div>
+
               {rows.map((row, index) => {
                 const ingredient = ingredientLookup.get(row.ingredientId);
                 return (
@@ -346,6 +361,7 @@ export function RecipeDialog({ menuItem, open, onOpenChange }: RecipeDialogProps
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AddIngredientDialog open={isAddIngredientOpen} onOpenChange={setIsAddIngredientOpen} />
     </Dialog>
   );
 }

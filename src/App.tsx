@@ -4,7 +4,6 @@ import Dashboard from "./pages/Dashboard";
 import Menu from "./pages/Menu";
 import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
-import Simple from "./pages/Simple";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/components/ThemeProvider";

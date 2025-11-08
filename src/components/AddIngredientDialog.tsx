@@ -23,17 +23,16 @@ type AddIngredientDialogProps = {
 type IngredientFormState = {
   name: string;
   unit: string;
-  currentQuantity: string;
-  thresholdQuantity: string;
   costPerUnit: string;
   supplier: string;
 };
 
+const DEFAULT_CURRENT_QUANTITY = 0;
+const DEFAULT_THRESHOLD_QUANTITY = 0;
+
 const EMPTY_FORM: IngredientFormState = {
   name: "",
   unit: "",
-  currentQuantity: "",
-  thresholdQuantity: "",
   costPerUnit: "",
   supplier: "",
 };
@@ -72,21 +71,12 @@ export function AddIngredientDialog({ open, onOpenChange }: AddIngredientDialogP
       return;
     }
 
-    const currentQuantity = Number(formState.currentQuantity);
-    const thresholdQuantity = Number(formState.thresholdQuantity);
     const costPerUnit = Number(formState.costPerUnit);
 
-    if (
-      Number.isNaN(currentQuantity) ||
-      Number.isNaN(thresholdQuantity) ||
-      Number.isNaN(costPerUnit) ||
-      currentQuantity < 0 ||
-      thresholdQuantity <= 0 ||
-      costPerUnit <= 0
-    ) {
+    if (Number.isNaN(costPerUnit) || costPerUnit <= 0) {
       toast({
         title: "Invalid numbers",
-        description: "Quantities and cost must be valid positive numbers.",
+        description: "Cost must be a valid positive number.",
         variant: "destructive",
       });
       return;
@@ -98,8 +88,8 @@ export function AddIngredientDialog({ open, onOpenChange }: AddIngredientDialogP
       const { error } = await supabase.from("ingredients").insert({
         name: trimmedName,
         unit: trimmedUnit,
-        current_quantity: currentQuantity,
-        threshold_quantity: thresholdQuantity,
+        current_quantity: DEFAULT_CURRENT_QUANTITY,
+        threshold_quantity: DEFAULT_THRESHOLD_QUANTITY,
         cost_per_unit: costPerUnit,
         supplier: trimmedSupplier || null,
       });
@@ -136,7 +126,7 @@ export function AddIngredientDialog({ open, onOpenChange }: AddIngredientDialogP
         <DialogHeader>
           <DialogTitle>Add Ingredient</DialogTitle>
           <DialogDescription>
-            Add a new ingredient to your inventory. Quantities should reflect your current stock levels.
+            Add a new ingredient to your inventory. Stock levels can be updated later from Inventory.
           </DialogDescription>
         </DialogHeader>
 
@@ -164,43 +154,17 @@ export function AddIngredientDialog({ open, onOpenChange }: AddIngredientDialogP
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="ingredient-current">Current quantity</Label>
-              <Input
-                id="ingredient-current"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formState.currentQuantity}
-                onChange={(event) => handleChange("currentQuantity")(event.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ingredient-threshold">Threshold quantity</Label>
-              <Input
-                id="ingredient-threshold"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formState.thresholdQuantity}
-                onChange={(event) => handleChange("thresholdQuantity")(event.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ingredient-cost">Cost per unit</Label>
-              <Input
-                id="ingredient-cost"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formState.costPerUnit}
-                onChange={(event) => handleChange("costPerUnit")(event.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ingredient-cost">Cost per unit</Label>
+            <Input
+              id="ingredient-cost"
+              type="number"
+              min="0"
+              step="0.01"
+              value={formState.costPerUnit}
+              onChange={(event) => handleChange("costPerUnit")(event.target.value)}
+              disabled={isSubmitting}
+            />
           </div>
 
           <div className="space-y-2">

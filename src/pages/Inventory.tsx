@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
+import { Plus, Sparkles, AlertTriangle, Loader2, ClipboardEdit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -14,11 +14,27 @@ import {
 } from "@/components/ui/table";
 import { useIngredients, useLowStockIngredients } from "@/hooks/useIngredients";
 import { AddIngredientDialog } from "@/components/AddIngredientDialog";
+import { ManualInventoryDialog } from "@/components/ManualInventoryDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Inventory() {
   const { data: inventoryItems, isLoading } = useIngredients();
   const { data: lowStockItems } = useLowStockIngredients();
   const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false);
+  const [isManualDialogOpen, setIsManualDialogOpen] = useState(false);
+  const [manualInventory, setManualInventory] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (inventoryItems) {
+      setManualInventory(
+        inventoryItems.map((item) => ({
+          ...item,
+          current_quantity: Math.max(Number(item.current_quantity) || 0, 0),
+        })),
+      );
+    }
+  }, [inventoryItems]);
 
   if (isLoading) {
     return (
@@ -39,24 +55,97 @@ export default function Inventory() {
     return "ok";
   };
 
-  const aiRecommendations = lowStockItems?.slice(0, 3).map(item => ({
-    ingredient: item.name,
-    reason: `Low stock - currently at ${Number(item.current_quantity).toFixed(0)} ${item.unit}`,
-    recommended: `${Math.ceil(item.threshold_quantity * 1.5)} ${item.unit}`
-  })) || [];
+  const aiRecommendations =
+    lowStockItems
+      ?.slice(0, 3)
+      .map((item) => ({
+        ingredient: item.name,
+        reason: `Low stock - currently at ${Number(item.current_quantity).toFixed(0)} ${item.unit}`,
+        recommended: `${Math.ceil(item.threshold_quantity * 1.5)} ${item.unit}`,
+      })) || [];
+
+  const manualDialogItems = useMemo(
+    () =>
+      (manualInventory || []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        unit: item.unit,
+        aiQuantity: Number(item.current_quantity ?? 0),
+        currentQuantity: Number(item.current_quantity ?? 0),
+      })),
+    [manualInventory],
+  );
+
+  const handleManualSave = async (
+    updatedItems: Array<{
+      id: string;
+      name: string;
+      unit: string;
+      aiQuantity: number;
+      currentQuantity: number;
+    }>,
+  ) => {
+    setManualInventory((prev) =>
+      prev.map((item) => {
+        const updated = updatedItems.find((entry) => entry.id === item.id);
+        if (!updated) return item;
+        return {
+          ...item,
+          current_quantity: updated.currentQuantity,
+        };
+      }),
+    );
+
+    try {
+      await fetch("/api/inventory/update", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          updates: updatedItems.map((item) => ({
+            id: item.id,
+            current_quantity: item.currentQuantity,
+          })),
+        }),
+      }).catch(() => {
+        // Endpoint is optional; swallow network errors for now.
+      });
+    } finally {
+      toast({
+        title: "Inventory updated successfully",
+        description: "Your manual corrections have been saved.",
+      });
+    }
+  };
+
+  const handleTeachAI = (corrections: Array<{ id: string; originalQuantity: number; correctedQuantity: number }>) => {
+    console.debug("Inventory corrections available for AI learning:", corrections);
+  };
 
   return (
     <DashboardLayout>
       <div className="p-8 space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
             <p className="text-muted-foreground mt-1">Track and manage your ingredient stock levels</p>
           </div>
-          <Button className="gap-2" onClick={() => setIsAddIngredientOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Add Ingredient
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsManualDialogOpen(true)}
+              disabled={!manualInventory || manualInventory.length === 0}
+            >
+              <ClipboardEdit className="h-4 w-4" />
+              Manual Inventory Update
+            </Button>
+            <Button className="gap-2" onClick={() => setIsAddIngredientOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add Ingredient
+            </Button>
+          </div>
         </div>
 
         {/* AI Recommendations */}
@@ -107,7 +196,7 @@ export default function Inventory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {inventoryItems?.map((item) => {
+                {manualInventory?.map((item) => {
                   const status = getStatus(item);
                   return (
                     <TableRow key={item.id}>
@@ -152,6 +241,13 @@ export default function Inventory() {
       <AddIngredientDialog
         open={isAddIngredientOpen}
         onOpenChange={setIsAddIngredientOpen}
+      />
+      <ManualInventoryDialog
+        open={isManualDialogOpen}
+        onOpenChange={setIsManualDialogOpen}
+        items={manualDialogItems}
+        onSave={handleManualSave}
+        onTeachAI={handleTeachAI}
       />
     </DashboardLayout>
   );

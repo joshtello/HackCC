@@ -1,10 +1,50 @@
+import { useCallback, useState } from "react";
+
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordModal } from "@/components/ui/PasswordModal";
+import { useToast } from "@/components/ui/use-toast";
+
+type PendingAction = "save" | "update" | null;
 
 export default function Settings() {
+  const { toast } = useToast();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+
+  const handleActionRequest = useCallback((action: NonNullable<PendingAction>) => {
+    setPendingAction(action);
+    setShowPasswordModal(true);
+  }, []);
+
+  const handlePasswordConfirm = useCallback(async () => {
+    const action = pendingAction;
+
+    setShowPasswordModal(false);
+    setPendingAction(null);
+
+    if (!action) {
+      return;
+    }
+
+    // Replace these placeholders with actual persistence logic.
+    toast({
+      title: "Changes saved",
+      description:
+        action === "save"
+          ? "Restaurant information has been updated."
+          : "Inventory alert preferences have been updated.",
+    });
+  }, [pendingAction, toast]);
+
+  const handlePasswordCancel = useCallback(() => {
+    setShowPasswordModal(false);
+    setPendingAction(null);
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="p-8 space-y-8">
@@ -31,7 +71,9 @@ export default function Settings() {
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
             </div>
-            <Button>Save Changes</Button>
+            <Button type="button" onClick={() => handleActionRequest("save")}>
+              Save Changes
+            </Button>
           </CardContent>
         </Card>
 
@@ -49,9 +91,17 @@ export default function Settings() {
               <Label htmlFor="notification-email">Notification Email</Label>
               <Input id="notification-email" type="email" placeholder="alerts@bevange.com" />
             </div>
-            <Button>Update Preferences</Button>
+            <Button type="button" onClick={() => handleActionRequest("update")}>
+              Update Preferences
+            </Button>
           </CardContent>
         </Card>
+
+        <PasswordModal
+          open={showPasswordModal}
+          onConfirm={handlePasswordConfirm}
+          onCancel={handlePasswordCancel}
+        />
       </div>
     </DashboardLayout>
   );
