@@ -117,7 +117,7 @@ export function ManualInventoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manual Inventory Update</DialogTitle>
           <DialogDescription>
@@ -126,44 +126,46 @@ export function ManualInventoryDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-lg border border-border bg-muted/30">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ingredient</TableHead>
-                <TableHead className="text-center">AI Estimate</TableHead>
-                <TableHead className="text-center">Corrected Quantity</TableHead>
-                <TableHead className="text-center">Unit</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {draftRows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.name}</TableCell>
-                  <TableCell className="text-center text-muted-foreground">
-                    {Number(row.aiQuantity).toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={row.draftQuantity}
-                      onChange={(event) => handleQuantityChange(row.id, event.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-center">{row.unit}</TableCell>
-                </TableRow>
-              ))}
-              {draftRows.length === 0 ? (
+        <div className="rounded-lg border border-border bg-muted/30 overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[640px]">
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No inventory items available.
-                  </TableCell>
+                  <TableHead>Ingredient</TableHead>
+                  <TableHead className="text-center">AI Estimate</TableHead>
+                  <TableHead className="text-center">Corrected Quantity</TableHead>
+                  <TableHead className="text-center">Unit</TableHead>
                 </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {draftRows.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.name}</TableCell>
+                    <TableCell className="text-center text-muted-foreground">
+                      {Number(row.aiQuantity).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={row.draftQuantity}
+                        onChange={(event) => handleQuantityChange(row.id, event.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">{row.unit}</TableCell>
+                  </TableRow>
+                ))}
+                {draftRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      No inventory items available.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
         </div>
         {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
 

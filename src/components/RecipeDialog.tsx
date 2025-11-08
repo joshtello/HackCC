@@ -221,7 +221,7 @@ export function RecipeDialog({ menuItem, open, onOpenChange }: RecipeDialogProps
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {menuItem ? `Recipe for ${menuItem.name}` : "Recipe"}
