@@ -11,6 +11,15 @@ export default function Dashboard() {
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems();
   const { data: menuWithSales, isLoading: loadingSales } = useMenuItemWithSales();
 
+  const inventoryValue = Math.max(
+    (ingredients ?? []).reduce((sum, item) => {
+      const quantity = Math.max(Number(item.current_quantity) || 0, 0);
+      const cost = Math.max(Number(item.cost_per_unit) || 0, 0);
+      return sum + quantity * cost;
+    }, 0),
+    0,
+  );
+
   const stats = [
     {
       title: "Low Stock Items",
@@ -28,7 +37,9 @@ export default function Dashboard() {
     },
     {
       title: "Inventory Value",
-      value: loadingIngredients ? "..." : `$${ingredients?.reduce((sum, item) => sum + (Number(item.current_quantity) * Number(item.cost_per_unit)), 0).toFixed(0) || 0}`,
+      value: loadingIngredients
+        ? "..."
+        : `$${inventoryValue.toFixed(0)}`,
       change: "Current stock value",
       icon: Package,
       variant: "default" as const,

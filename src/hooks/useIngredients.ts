@@ -11,7 +11,12 @@ export function useIngredients() {
         .order("name");
 
       if (error) throw error;
-      return data;
+      return (data || []).map((item) => ({
+        ...item,
+        current_quantity: Math.max(Number(item.current_quantity) || 0, 0),
+        threshold_quantity: Math.max(Number(item.threshold_quantity) || 0, 0),
+        cost_per_unit: Math.max(Number(item.cost_per_unit) || 0, 0),
+      }));
     },
   });
 }
@@ -27,7 +32,14 @@ export function useLowStockIngredients() {
 
       if (error) throw error;
 
-      return data.filter(item => item.current_quantity < item.threshold_quantity);
+      return (data || [])
+        .map((item) => ({
+          ...item,
+          current_quantity: Math.max(Number(item.current_quantity) || 0, 0),
+          threshold_quantity: Math.max(Number(item.threshold_quantity) || 0, 0),
+          cost_per_unit: Math.max(Number(item.cost_per_unit) || 0, 0),
+        }))
+        .filter(item => item.current_quantity < item.threshold_quantity);
     },
   });
 }

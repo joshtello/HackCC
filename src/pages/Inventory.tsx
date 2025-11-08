@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useIngredients, useLowStockIngredients } from "@/hooks/useIngredients";
+import { AddIngredientDialog } from "@/components/AddIngredientDialog";
 
 export default function Inventory() {
   const { data: inventoryItems, isLoading } = useIngredients();
   const { data: lowStockItems } = useLowStockIngredients();
+  const [isAddIngredientOpen, setIsAddIngredientOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -28,7 +31,9 @@ export default function Inventory() {
   }
 
   const getStatus = (item: any) => {
-    const percentage = (item.current_quantity / item.threshold_quantity) * 100;
+    const quantity = Math.max(Number(item.current_quantity) || 0, 0);
+    const threshold = Math.max(Number(item.threshold_quantity) || 0, 1);
+    const percentage = (quantity / threshold) * 100;
     if (percentage < 30) return "critical";
     if (percentage < 50) return "low";
     return "ok";
@@ -48,7 +53,7 @@ export default function Inventory() {
             <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
             <p className="text-muted-foreground mt-1">Track and manage your ingredient stock levels</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setIsAddIngredientOpen(true)}>
             <Plus className="h-4 w-4" />
             Add Ingredient
           </Button>
@@ -108,11 +113,11 @@ export default function Inventory() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>
-                        {Number(item.current_quantity).toFixed(0)} {item.unit}
+                        {Math.max(Number(item.current_quantity) || 0, 0).toFixed(0)} {item.unit}
                       </TableCell>
                       <TableCell>${Number(item.cost_per_unit).toFixed(2)}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {Number(item.threshold_quantity).toFixed(0)} {item.unit}
+                        {Math.max(Number(item.threshold_quantity) || 0, 0).toFixed(0)} {item.unit}
                       </TableCell>
                       <TableCell>
                         {status === "critical" && (
@@ -144,6 +149,10 @@ export default function Inventory() {
           </CardContent>
         </Card>
       </div>
+      <AddIngredientDialog
+        open={isAddIngredientOpen}
+        onOpenChange={setIsAddIngredientOpen}
+      />
     </DashboardLayout>
   );
 }
