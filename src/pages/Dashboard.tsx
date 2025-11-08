@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { useLowStockIngredients, useIngredients } from "@/hooks/useIngredients";
 import { useMenuItems, useMenuItemWithSales } from "@/hooks/useMenuItems";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { manualInventory } from "@/data/manualInventory";
 
 export default function Dashboard() {
   const { data: lowStockItems, isLoading: loadingLowStock } = useLowStockIngredients();
