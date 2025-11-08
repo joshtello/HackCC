@@ -6,15 +6,21 @@ import { Switch } from "@/components/ui/switch";
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return document.documentElement.classList.contains("dark");
+  });
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const isDark = mounted && resolvedTheme === "dark";
+    if (typeof resolvedTheme === "string") {
+      setIsDark(resolvedTheme === "dark");
+    }
+  }, [resolvedTheme]);
 
   const handleToggle = (checked: boolean) => {
+    setIsDark(checked);
     setTheme(checked ? "dark" : "light");
   };
 
@@ -27,7 +33,7 @@ export function ThemeToggle() {
           <p className="text-xs text-muted-foreground">Toggle theme</p>
         </div>
       </div>
-      <Switch checked={isDark} onCheckedChange={handleToggle} disabled={!mounted} aria-label="Toggle dark mode" />
+      <Switch checked={isDark} onCheckedChange={handleToggle} aria-label="Toggle dark mode" />
     </div>
   );
 }

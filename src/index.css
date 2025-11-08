@@ -127,3 +127,108 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+
+  /* Hide navigation and interactive chrome */
+  .sidebar,
+  [data-sidebar],
+  [data-sidebar="trigger"],
+  [data-sidebar="rail"],
+  [data-sidebar="content"],
+  [data-sidebar="footer"],
+  header,
+  nav,
+  .notifications-popover,
+  button[data-hide-print],
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* Hide filters and export buttons */
+  .filters-card,
+  .filters-card *,
+  .export-buttons,
+  .export-buttons * {
+    display: none !important;
+  }
+
+  /* Ensure main content spans full width */
+  main,
+  #root,
+  .analytics-page {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.35in !important;
+  }
+
+  /* Adjust grid layout for print */
+  .analytics-page .grid,
+  .analytics-page .xl\:grid-cols-2,
+  .analytics-page .lg\:grid-cols-2,
+  .analytics-page .md\:grid-cols-2,
+  .analytics-page .md\:grid-cols-3 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.6rem !important;
+  }
+
+  .analytics-page .grid.print-single-column {
+    display: block !important;
+  }
+
+  .analytics-page .grid > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Reduce card padding for print */
+  .analytics-page .card,
+  .analytics-page .card-content,
+  .analytics-page .card-header {
+    padding: 0.5rem 0.7rem !important;
+    box-shadow: none !important;
+    border-radius: 0.4rem !important;
+  }
+
+  /* Keep pie chart labels visible */
+  .analytics-page svg text {
+    fill: #111 !important;
+    font-size: 10px !important;
+  }
+
+  /* Tailor AI section */
+  .analytics-page .ai-section {
+    page-break-before: always;
+    margin-top: 0 !important;
+  }
+
+  .ai-card {
+    page-break-after: auto;
+  }
+
+  .ai-card .grid {
+    display: contents !important;
+  }
+
+  .ai-card .grid > * {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Page break separation */
+  .print-page-one {
+    page-break-after: always;
+  }
+
+  .print-page-two {
+    page-break-after: always;
+  }
+
+  @page {
+    margin: 0.3in 0.35in;
+  }
+}

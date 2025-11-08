@@ -718,7 +718,7 @@ export default function Analytics() {
       {
         label: "Waste / overstock",
         value: `${wasteRatio}%`,
-        icon: Package,
+      icon: Package,
         route: "/inventory",
       },
       {
@@ -890,331 +890,533 @@ export default function Analytics() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8 p-6 md:p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-              {isFetching && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+      <div className="analytics-page space-y-8 p-6 md:p-8">
+        <div className="print-page-one space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+                {isFetching && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              </div>
+              <p className="mt-1 text-muted-foreground">
+                Sales intelligence powered by the Coffee Shop dataset.
+              </p>
             </div>
-            <p className="mt-1 text-muted-foreground">
-              Sales intelligence powered by the Coffee Shop dataset.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Popover open={alertsOpen} onOpenChange={setAlertsOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={alerts.length ? "destructive" : "secondary"}
-                  className="gap-2 border border-border/70 px-3 py-2 shadow-sm"
-                >
-                  <span className="relative flex items-center">
-                    <Bell className="h-4 w-4" />
-                    {alerts.length > 0 && (
-                      <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-background text-xs font-semibold text-destructive">
-                        {alerts.length}
+            <div className="export-buttons flex flex-wrap items-center gap-2">
+              <div className="notifications-popover">
+                <Popover open={alertsOpen} onOpenChange={setAlertsOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={alerts.length ? "destructive" : "secondary"}
+                      className="gap-2 border border-border/70 px-3 py-2 shadow-sm"
+                    >
+                      <span className="relative flex items-center">
+                        <Bell className="h-4 w-4" />
+                        {alerts.length > 0 && (
+                          <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-background text-xs font-semibold text-destructive">
+                            {alerts.length}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                  <span className="text-sm font-medium">
-                    {alerts.length ? `${alerts.length} Notifications` : "Notifications"}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold">Alerts & notifications</p>
-                    <Badge variant="outline" className="text-xs">
-                      {alerts.length ? "Action required" : "All clear"}
-                    </Badge>
-                  </div>
-                  {loadingState && (
-                    <div className="space-y-2">
-                      <Skeleton className="h-12 w-full rounded-lg" />
-                      <Skeleton className="h-12 w-full rounded-lg" />
-                    </div>
-                  )}
-                  {!loadingState && alerts.length === 0 && (
-                    <div className="rounded-lg border border-border/60 bg-secondary/40 p-4 text-sm text-muted-foreground">
-                      No critical alerts. Inventory performance is stable.
-                    </div>
-                  )}
-                  {!loadingState &&
-                    alerts.map((alert) => (
-                      <button
-                        key={alert.title}
-                        type="button"
-                        onClick={() => {
-                          navigate(alert.route);
-                          setAlertsOpen(false);
-                        }}
-                        className="flex w-full items-start gap-3 rounded-lg border border-border/60 bg-background p-3 text-left transition hover:border-primary/60 hover:bg-secondary/40"
-                      >
-                        <span className="text-lg leading-none">
-                          {alert.status === "red" ? "🔴" : alert.status === "yellow" ? "🟡" : "🟢"}
-                        </span>
-        <div>
-                          <p className="font-medium text-foreground">{alert.title}</p>
-                          <p className="text-sm text-muted-foreground">{alert.description}</p>
+                      <span className="text-sm font-medium">
+                        {alerts.length ? `${alerts.length} Notifications` : "Notifications"}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="end">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold">Alerts & notifications</p>
+                        <Badge variant="outline" className="text-xs">
+                          {alerts.length ? "Action required" : "All clear"}
+                        </Badge>
+                      </div>
+                      {loadingState && (
+                        <div className="space-y-2">
+                          <Skeleton className="h-12 w-full rounded-lg" />
+                          <Skeleton className="h-12 w-full rounded-lg" />
                         </div>
-                        <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" aria-hidden />
-                      </button>
-                    ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button variant="outline" onClick={handleExportCsv} className="gap-2">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
-            <Button variant="outline" onClick={handleExportPdf} className="gap-2">
-              <Download className="h-4 w-4" />
-              Export PDF
-            </Button>
+                      )}
+                      {!loadingState && alerts.length === 0 && (
+                        <div className="rounded-lg border border-border/60 bg-secondary/40 p-4 text-sm text-muted-foreground">
+                          No critical alerts. Inventory performance is stable.
+                        </div>
+                      )}
+                      {!loadingState &&
+                        alerts.map((alert) => (
+                          <button
+                            key={alert.title}
+                            type="button"
+                            onClick={() => {
+                              navigate(alert.route);
+                              setAlertsOpen(false);
+                            }}
+                            className="flex w-full items-start gap-3 rounded-lg border border-border/60 bg-background p-3 text-left transition hover:border-primary/60 hover:bg-secondary/40"
+                          >
+                            <span className="text-lg leading-none">
+                              {alert.status === "red" ? "🔴" : alert.status === "yellow" ? "🟡" : "🟢"}
+                            </span>
+                            <div>
+                              <p className="font-medium text-foreground">{alert.title}</p>
+                              <p className="text-sm text-muted-foreground">{alert.description}</p>
+                            </div>
+                            <ArrowUpRight className="ml-auto h-4 w-4 text-muted-foreground" aria-hidden />
+                          </button>
+                        ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Button variant="outline" onClick={handleExportCsv} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+              <Button variant="outline" onClick={handleExportPdf} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Card className="border-border/60 bg-secondary/40">
-            <CardContent className="flex items-center justify-between gap-2 py-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Inventory health</p>
-                <p className="text-xl font-semibold">{inventoryHealthScore}/100</p>
-              </div>
-              <Badge variant="secondary" className="shrink-0">
-                {getStatusIndicator(inventoryHealthScore)}
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-secondary/40">
-            <CardContent className="flex items-center justify-between gap-2 py-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Turnover rate</p>
-                <p className="text-xl font-semibold">{turnoverRate} / SKU</p>
-              </div>
-              <Badge variant="outline" className="shrink-0">
-                Velocity
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-secondary/40">
-            <CardContent className="flex items-center justify-between gap-2 py-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Waste ratio</p>
-                <p className="text-xl font-semibold">{wasteRatio}%</p>
-              </div>
-              <Badge variant="destructive" className="shrink-0 bg-destructive/15 text-destructive">
-                Waste
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {KPI_CONFIG.map((item) => {
-            const value = kpiData[item.key];
-            const Icon = item.icon;
-            return (
-              <Card key={item.key} className="relative overflow-hidden border-border/60">
-                <CardHeader className="space-y-1 pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardDescription className="flex items-center gap-2 text-xs uppercase tracking-wide">
-                      {item.label}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Card className="border-border/60 bg-secondary/40">
+              <CardContent className="flex items-center justify-between gap-2 py-3">
+                <div>
+                  <p className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Inventory health
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="cursor-help text-muted-foreground/80">?</span>
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-semibold lowercase text-muted-foreground/80">
+                          i
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Derived from the Coffee Shop Sales dataset.</p>
+                        <p>Composite score blending stockouts, waste, and velocity.</p>
                       </TooltipContent>
                     </Tooltip>
-                    </CardDescription>
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  {loadingState ? (
-                    <Skeleton className="h-7 w-24" />
-                  ) : (
-                    <CardTitle className="text-2xl font-bold">
-                      {item.key === "ordersPending" || item.key === "lowStockItems" ? formatNumber(value) : formatCurrency(value)}
-                    </CardTitle>
-                  )}
-                </CardHeader>
-                <CardContent className="flex items-center justify-between pt-0">
-                  <Badge variant="secondary" className="px-2 py-1">
-                    {getStatusIndicator(item.key === "inventoryValue" ? inventoryHealthScore : 80)} Dataset synced
-                  </Badge>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </p>
+                  <p className="text-xl font-semibold">{inventoryHealthScore}/100</p>
+                </div>
+                <Badge variant="secondary" className="shrink-0">
+                  {getStatusIndicator(inventoryHealthScore)}
+                </Badge>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60 bg-secondary/40">
+              <CardContent className="flex items-center justify-between gap-2 py-3">
+                <div>
+                  <p className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Turnover rate
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-semibold lowercase text-muted-foreground/80">
+                          i
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Average number of times each SKU sold through during the selected period.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </p>
+                  <p className="text-xl font-semibold">{turnoverRate} / SKU</p>
+                </div>
+                <Badge variant="outline" className="shrink-0">
+                  Velocity
+                </Badge>
+              </CardContent>
+            </Card>
+            <Card className="border-border/60 bg-secondary/40">
+              <CardContent className="flex items-center justify-between gap-2 py-3">
+                <div>
+                  <p className="flex items-center gap-1 text-xs uppercase tracking-wide text-muted-foreground">
+                    Waste ratio
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-semibold lowercase text-muted-foreground/80">
+                          i
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Percentage of low-performing SKUs relative to the active catalog.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </p>
+                  <p className="text-xl font-semibold">{wasteRatio}%</p>
+                </div>
+                <Badge variant="destructive" className="shrink-0 bg-destructive/15 text-destructive">
+                  Waste
+                </Badge>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {KPI_CONFIG.map((item) => {
+              const value = kpiData[item.key];
+              const Icon = item.icon;
+              return (
+                <Card key={item.key} className="relative overflow-hidden border-border/60">
+                  <CardHeader className="space-y-1 pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardDescription className="flex items-center gap-2 text-xs uppercase tracking-wide">
+                        {item.label}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-semibold lowercase text-muted-foreground/80">
+                              i
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              {item.key === "revenueToday"
+                                ? "Gross sales captured so far today."
+                                : item.key === "inventoryValue"
+                                  ? "Estimated holding value of current stock based on cost."
+                                  : item.key === "ordersPending"
+                                    ? "Projected orders awaiting fulfillment based on demand pressure."
+                                    : item.key === "lowStockItems"
+                                      ? "Count of SKUs trending toward their safety threshold."
+                                      : "Derived from the Coffee Shop Sales dataset."}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardDescription>
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    {loadingState ? (
+                      <Skeleton className="h-7 w-24" />
+                    ) : (
+                      <CardTitle className="text-2xl font-bold">
+                        {item.key === "ordersPending" || item.key === "lowStockItems" ? formatNumber(value) : formatCurrency(value)}
+                      </CardTitle>
+                    )}
+                  </CardHeader>
+                  <CardContent className="flex items-center justify-between pt-0">
+                    <Badge variant="secondary" className="px-2 py-1">
+                      {getStatusIndicator(item.key === "inventoryValue" ? inventoryHealthScore : 80)} Dataset synced
+                    </Badge>
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
-        <Card className="border-border/60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Filters</CardTitle>
-            <CardDescription className="text-xs">
-              Slice the dataset by date range, category, or store.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-3">
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground tracking-wide">Date range</p>
-              <Select value={dateRange.toString()} onValueChange={(value) => setDateRange(Number(value))}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Select range" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DATE_RANGE_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value.toString()}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground tracking-wide">Category</p>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  {categoryOptions.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-medium uppercase text-muted-foreground tracking-wide">Store location</p>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="All locations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All locations</SelectItem>
-                  {locationOptions.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle>Weekly Sales vs Inventory</CardTitle>
-              <CardDescription>Track revenue alongside simulated inventory drawdown.</CardDescription>
+        <div className="print-page-two space-y-6">
+          <Card className="filters-card border-border/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Filters</CardTitle>
+              <CardDescription className="text-xs">
+                Slice the dataset by date range, category, or store.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="h-[320px]">
-              {loadingState ? (
-                <Skeleton className="h-full w-full rounded-lg" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={weeklySalesData}
-                    onClick={(data) => {
-                      if (data && "activePayload" in data) {
-                        const payload = data.activePayload?.[0]?.payload as (typeof weeklySalesData)[number];
-                        if (payload) {
-                          handleDrilldown({
-                            type: "time",
-                            title: `Daily breakdown · ${payload.day}`,
-                            items: [
-                              { label: "Sales", value: payload.sales, trend: Math.random() * 10 },
-                              { label: "Inventory", value: payload.inventory, trend: -Math.random() * 6 },
-                            ],
-                          });
-                        }
-                      }
-                    }}
-                  >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" />
-                    <RechartTooltip
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                        borderRadius: "var(--radius)",
-                      }}
-                    />
-                    <Line yAxisId="left" type="monotone" dataKey="sales" stroke="hsl(var(--primary))" strokeWidth={2} />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="inventory"
-                      stroke="hsl(var(--secondary-foreground))"
-                      strokeWidth={2}
-                    />
-                </LineChart>
-              </ResponsiveContainer>
-              )}
+            <CardContent className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Date range</p>
+                <Select value={dateRange.toString()} onValueChange={(value) => setDateRange(Number(value))}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_RANGE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Category</p>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categoryOptions.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Store location</p>
+                <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="All locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All locations</SelectItem>
+                    {locationOptions.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle>Revenue by Category</CardTitle>
-              <CardDescription>Compare category performance across stores.</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[320px]">
-              {loadingState ? (
-                <Skeleton className="h-full w-full rounded-lg" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={revenueByCategory}
-                    onClick={(data) => {
-                      if (data && "activePayload" in data) {
-                        const payload = data.activePayload?.[0]?.payload as (typeof revenueByCategory)[number];
-                        if (payload) {
-                          const related = filteredRecords
-                            .filter((record) => record.category === payload.category)
-                            .slice(0, 6)
-                            .map((record) => ({
-                              label: record.detail,
-                              value: record.revenue,
-                              trend: Math.random() * 15,
-                            }));
-                          handleDrilldown({
-                            type: "category",
-                            title: `Category detail · ${payload.category}`,
-                            items: related,
-                          });
-                        }
-                      }
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
-                    <RechartTooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "var(--radius)",
-                      }}
-                      formatter={(value: number) => [formatCurrency(value), "Revenue"]}
-                    />
-                    <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
+          <div className="print-page-two-content grid gap-6 xl:grid-cols-2">
+            <div className="space-y-6">
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Weekly Sales vs Inventory</CardTitle>
+                  <CardDescription>Track revenue alongside simulated inventory drawdown.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[320px]">
+                  {loadingState ? (
+                    <Skeleton className="h-full w-full rounded-lg" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={weeklySalesData}
+                        onClick={(data) => {
+                          if (data && "activePayload" in data) {
+                            const payload = data.activePayload?.[0]?.payload as (typeof weeklySalesData)[number];
+                            if (payload) {
+                              handleDrilldown({
+                                type: "time",
+                                title: `Daily breakdown · ${payload.day}`,
+                                items: [
+                                  { label: "Sales", value: payload.sales, trend: Math.random() * 10 },
+                                  { label: "Inventory", value: payload.inventory, trend: -Math.random() * 6 },
+                                ],
+                              });
+                            }
+                          }
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" />
+                        <RechartTooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius)",
+                          }}
+                        />
+                        <Line
+                          yAxisId="left"
+                          type="monotone"
+                          dataKey="sales"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                        />
+                        <Line
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="inventory"
+                          stroke="hsl(var(--secondary-foreground))"
+                          strokeWidth={2}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
 
-          <Card className="xl:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inventory value by category</CardTitle>
+                  <CardDescription>Estimate holding value for categories.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {loadingState ? (
+                    <Skeleton className="h-full w-full rounded-lg" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          dataKey="value"
+                          data={inventoryValueByCategory}
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={6}
+                          label={({ cx, cy, midAngle, outerRadius, index }) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = outerRadius + 18;
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            const entry = inventoryValueByCategory[index];
+                            return (
+                              <text
+                                x={x}
+                                y={y}
+                                fill="hsl(var(--foreground))"
+                                textAnchor={x > cx ? "start" : "end"}
+                                dominantBaseline="middle"
+                                className="text-xs font-medium"
+                              >
+                                {entry?.category}
+                              </text>
+                            );
+                          }}
+                          labelLine={false}
+                          onClick={(data) => {
+                            if (data && "name" in data.payload) {
+                              const category = data.payload.name as string;
+                              const items = productStats
+                                .filter((stat) => stat.category === category)
+                                .map((stat) => ({
+                                  label: stat.detail,
+                                  value: stat.avgPrice * (stat.totalQty + 25),
+                                  trend: Math.random() * 8,
+                                }))
+                                .slice(0, 8);
+                              handleDrilldown({
+                                type: "inventory",
+                                title: `Inventory allocation · ${category}`,
+                                items,
+                              });
+                            }
+                          }}
+                        >
+                          {inventoryValueByCategory.map((entry, index) => (
+                            <Cell
+                              key={entry.category}
+                              fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <RechartTooltip
+                          formatter={(value: number, _name: string, props) => {
+                            const payload = props?.payload as (typeof inventoryValueByCategory)[number] | undefined;
+                            const category = payload?.category ?? props?.payload?.name ?? "Category";
+                            const share = inventoryValueTotal
+                              ? Math.round((Number(value) / inventoryValueTotal) * 100)
+                              : 0;
+                            const avgQty = payload?.avgQty ?? 0;
+                            return [
+                              `${formatCurrency(Number(value))}`,
+                              `${category} • ${share}% share · Avg daily qty ${formatNumber(Math.round(avgQty))}`,
+                            ];
+                          }}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius)",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Revenue by Category</CardTitle>
+                  <CardDescription>Compare category performance across stores.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[320px]">
+                  {loadingState ? (
+                    <Skeleton className="h-full w-full rounded-lg" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={revenueByCategory}
+                        onClick={(data) => {
+                          if (data && "activePayload" in data) {
+                            const payload = data.activePayload?.[0]?.payload as (typeof revenueByCategory)[number];
+                            if (payload) {
+                              const related = filteredRecords
+                                .filter((record) => record.category === payload.category)
+                                .slice(0, 6)
+                                .map((record) => ({
+                                  label: record.detail,
+                                  value: record.revenue,
+                                  trend: Math.random() * 15,
+                                }));
+                              handleDrilldown({
+                                type: "category",
+                                title: `Category detail · ${payload.category}`,
+                                items: related,
+                              });
+                            }
+                          }
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis stroke="hsl(var(--muted-foreground))" />
+                        <RechartTooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius)",
+                          }}
+                          formatter={(value: number) => [formatCurrency(value), "Revenue"]}
+                        />
+                        <Bar dataKey="revenue" radius={[8, 8, 0, 0]} fill="hsl(var(--primary))" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profit margin vs. turnover</CardTitle>
+                  <CardDescription>Highlight efficient menu items.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                  {loadingState ? (
+                    <Skeleton className="h-full w-full rounded-lg" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ScatterChart
+                        margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                        onClick={(data) => {
+                          if (data && "activePayload" in data) {
+                            const payload = data.activePayload?.[0]?.payload as (typeof scatterData)[number];
+                            if (payload) {
+                              handleDrilldown({
+                                type: "product",
+                                title: `Turnover detail · ${payload.name}`,
+                                items: [
+                                  { label: "Margin", value: payload.margin, trend: payload.margin },
+                                  { label: "Turnover", value: payload.turnover, trend: payload.turnover },
+                                  { label: "Revenue", value: payload.revenue, trend: payload.revenue },
+                                ],
+                              });
+                            }
+                          }
+                        }}
+                      >
+                        <CartesianGrid stroke="hsl(var(--border))" />
+                        <XAxis type="number" dataKey="turnover" name="Turnover" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis type="number" dataKey="margin" name="Margin" stroke="hsl(var(--muted-foreground))" />
+                        <RechartTooltip
+                          cursor={{ strokeDasharray: "3 3" }}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius)",
+                          }}
+                          formatter={(value: number, name) =>
+                            name === "margin" ? [`${value.toFixed(2)}%`, "Margin"] : [formatNumber(value), name]
+                          }
+                        />
+                        <Scatter data={scatterData} fill="hsl(var(--primary))" />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <Card className="print-hidden xl:col-span-2">
             <CardHeader>
               <CardTitle>Sales activity heat map</CardTitle>
               <CardDescription>Visualize demand intensity by day and hour.</CardDescription>
@@ -1239,6 +1441,7 @@ export default function Analytics() {
                             <TooltipTrigger asChild>
                               <div
                                 className="h-12 rounded-md transition-all"
+                                data-heatmap-cell
                                 style={{
                                   background: `rgba(37, 99, 235, ${Math.max(cell.intensity, 0.08)})`,
                                   border: "1px solid rgba(37, 99, 235, 0.18)",
@@ -1275,129 +1478,11 @@ export default function Analytics() {
               )}
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Inventory value by category</CardTitle>
-              <CardDescription>Estimate holding value for categories.</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              {loadingState ? (
-                <Skeleton className="h-full w-full rounded-lg" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      dataKey="value"
-                      data={inventoryValueByCategory}
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={6}
-                      onClick={(data) => {
-                        if (data && "name" in data.payload) {
-                          const category = data.payload.name as string;
-                          const items = productStats
-                            .filter((stat) => stat.category === category)
-                            .map((stat) => ({
-                              label: stat.detail,
-                              value: stat.avgPrice * (stat.totalQty + 25),
-                              trend: Math.random() * 8,
-                            }))
-                            .slice(0, 8);
-                          handleDrilldown({
-                            type: "inventory",
-                            title: `Inventory allocation · ${category}`,
-                            items,
-                          });
-                        }
-                      }}
-                    >
-                      {inventoryValueByCategory.map((entry, index) => (
-                        <Cell
-                          key={entry.category}
-                          fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <RechartTooltip
-                      formatter={(value: number, _name: string, props) => {
-                        const payload = props?.payload as (typeof inventoryValueByCategory)[number] | undefined;
-                        const category = payload?.category ?? props?.payload?.name ?? "Category";
-                        const share = inventoryValueTotal
-                          ? Math.round((Number(value) / inventoryValueTotal) * 100)
-                          : 0;
-                        const avgQty = payload?.avgQty ?? 0;
-                        return [
-                          `${formatCurrency(Number(value))}`,
-                          `${category} • ${share}% share · Avg daily qty ${formatNumber(Math.round(avgQty))}`,
-                        ];
-                      }}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                        borderRadius: "var(--radius)",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Profit margin vs. turnover</CardTitle>
-              <CardDescription>Highlight efficient menu items.</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[300px]">
-              {loadingState ? (
-                <Skeleton className="h-full w-full rounded-lg" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart
-                    margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-                    onClick={(data) => {
-                      if (data && "activePayload" in data) {
-                        const payload = data.activePayload?.[0]?.payload as (typeof scatterData)[number];
-                        if (payload) {
-                          handleDrilldown({
-                            type: "product",
-                            title: `Turnover detail · ${payload.name}`,
-                            items: [
-                              { label: "Margin", value: payload.margin, trend: payload.margin },
-                              { label: "Turnover", value: payload.turnover, trend: payload.turnover },
-                              { label: "Revenue", value: payload.revenue, trend: payload.revenue },
-                            ],
-                          });
-                        }
-                      }
-                    }}
-                  >
-                    <CartesianGrid stroke="hsl(var(--border))" />
-                    <XAxis type="number" dataKey="turnover" name="Turnover" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis type="number" dataKey="margin" name="Margin" stroke="hsl(var(--muted-foreground))" />
-                    <RechartTooltip
-                      cursor={{ strokeDasharray: "3 3" }}
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "var(--radius)",
-                      }}
-                      formatter={(value: number, name) =>
-                        name === "margin" ? [`${value.toFixed(2)}%`, "Margin"] : [formatNumber(value), name]
-                      }
-                    />
-                    <Scatter data={scatterData} fill="hsl(var(--primary))" />
-                  </ScatterChart>
-              </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="lg:col-span-2">
-          <CardHeader>
+        <div className="print-hidden ai-section grid gap-6 lg:grid-cols-2">
+          <Card className="ai-card lg:col-span-2">
+            <CardHeader>
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <CardTitle>AI inventory intelligence</CardTitle>
@@ -1408,9 +1493,9 @@ export default function Analytics() {
                   AI
                 </Badge>
               </div>
-          </CardHeader>
-            <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
+            </CardHeader>
+            <CardContent className="space-y-6 pt-0">
+              <div className="grid gap-4 md:grid-cols-2">
                 {aiInsights.map((insight) => {
                   const Icon = insight.icon;
                   return (
@@ -1423,22 +1508,21 @@ export default function Analytics() {
                       <div className="flex items-start gap-3">
                         <div className="rounded-lg border border-border bg-background p-2">
                           <Icon className="h-4 w-4 text-primary" />
-                  </div>
+                        </div>
                         <div className="space-y-1">
                           <p className="font-medium">{insight.label}</p>
                           <p className="text-sm text-muted-foreground leading-relaxed">{insight.value}</p>
-                  </div>
-                </div>
+                        </div>
+                      </div>
                       <ArrowUpRight className="mt-3 h-4 w-4 self-end text-muted-foreground group-hover:text-primary" aria-hidden />
                     </button>
                   );
                 })}
-            </div>
+              </div>
 
               <Separator />
-
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
 
         <Dialog open={Boolean(drilldown)} onOpenChange={(open) => !open && setDrilldown(null)}>
