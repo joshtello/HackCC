@@ -13,6 +13,8 @@ async function tryFetchSales(): Promise<SalesRecord[]> {
     "/coffee-shop-sales.xlsx", // recommended: put file in public/ as coffee-shop-sales.xlsx
     "/Coffee%20Shop%20Sales.xlsx", // encoded space
     "/Coffee Shop Sales.xlsx", // raw (may 404)
+    "/data/coffee-sales-manhattan.xlsx", // optional alternate
+    "/data/coffee-sales-manhattan.json", // JSON fallback (if parser supports)
   ];
 
   for (const p of paths) {
@@ -33,10 +35,8 @@ export function useTopSellersFromExcel(days: number = 7) {
       const records = await tryFetchSales();
       if (records.length === 0) return [];
 
-      // Filter to last `days`
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      const filtered = records.filter(r => r.date >= since);
+      // Use all available records (already filtered to Lower Manhattan)
+      const filtered = records;
 
       // Aggregate by item name (case-sensitive as recorded)
       const counts = new Map<string, number>();

@@ -1,7 +1,7 @@
 // src/hooks/useSalesBasedPrediction.ts
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { parseSalesExcel, aggregateSalesByItem } from "@/lib/salesDataParser";
+import { parseSalesExcel, aggregateSalesByItem, SalesRecord } from "@/lib/salesDataParser";
 
 interface IngredientPrediction {
   id: string;
@@ -16,16 +16,32 @@ export function useSalesBasedPrediction(days: number) {
     queryKey: ["sales-prediction", days],
     queryFn: async (): Promise<IngredientPrediction[]> => {
       try {
-        // 1. Load sales data from Excel file (last 30 days)
-        const salesRecords = await parseSalesExcel('/Coffee Shop Sales.xlsx');
+        // 1. Load sales data from Excel file (try multiple likely paths)
+        const paths = [
+          "/coffee-shop-sales.xlsx",
+          "/Coffee%20Shop%20Sales.xlsx",
+          "/Coffee Shop Sales.xlsx",
+        ];
+        let salesRecords: SalesRecord[] = [];
+        for (const p of paths) {
+          try {
+            const recs = await parseSalesExcel(p);
+            if (recs.length > 0) { salesRecords = recs; break; }
+          } catch {
+            // try next path
+          }
+        }
         
         if (salesRecords.length === 0) {
           console.warn("No sales records found");
           return [];
         }
 
+        // Use all available records (already filtered to Lower Manhattan)
+        const recordsForCalc = salesRecords;
+
         // 2. Aggregate sales by item name
-        const salesByItem = aggregateSalesByItem(salesRecords);
+        const salesByItem = aggregateSalesByItem(recordsForCalc);
         
         // 3. Fetch all menu items with their recipes
         const { data: menuItems, error: menuError } = await supabase
@@ -58,7 +74,7 @@ export function useSalesBasedPrediction(days: number) {
           ingredientId: string;
         }>();
 
-        menuItems?.forEach((menuItem: any) => {
+  menuItems?.forEach((menuItem: any) => {
           // Find matching sales (case-insensitive match)
           const salesQty = Array.from(salesByItem.entries()).find(
             ([itemName]) => itemName.toLowerCase().includes(menuItem.name.toLowerCase()) ||
@@ -67,7 +83,9 @@ export function useSalesBasedPrediction(days: number) {
 
           if (salesQty > 0 && menuItem.recipes) {
             // Calculate how many items will be sold in the prediction period
-            const dailyAverage = salesQty / 30; // Average over 30 days
+            // Estimate daily average based on available data window
+            const windowDays = Math.max(1, Math.ceil((recordsForCalc[recordsForCalc.length-1].date.getTime() - recordsForCalc[0].date.getTime()) / (1000*60*60*24)) || 365);
+            const dailyAverage = salesQty / windowDays;
             const predictedSales = Math.ceil(dailyAverage * days);
 
             // Calculate ingredient needs for this menu item
