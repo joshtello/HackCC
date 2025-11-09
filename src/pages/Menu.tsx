@@ -1,12 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, TrendingUp, TrendingDown, Loader2, PencilLine, Save, X } from "lucide-react";
+import {
+  Plus,
+  TrendingUp,
+  TrendingDown,
+  Loader2,
+  PencilLine,
+  Save,
+  X,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -24,10 +38,15 @@ export default function Menu() {
   const { data: menuItems, isLoading } = useMenuItemWithSales();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeMenuItem, setActiveMenuItem] = useState<{ id: string; name: string } | null>(null);
+  const [activeMenuItem, setActiveMenuItem] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [isAddMenuItemOpen, setIsAddMenuItemOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedValues, setEditedValues] = useState<Record<string, { name: string; price: string }>>({});
+  const [editedValues, setEditedValues] = useState<
+    Record<string, { name: string; price: string }>
+  >({});
   const [isSavingEdits, setIsSavingEdits] = useState(false);
 
   if (isLoading) {
@@ -42,7 +61,7 @@ export default function Menu() {
 
   const sortedItems = useMemo(
     () => menuItems?.slice().sort((a, b) => b.sales - a.sales) || [],
-    [menuItems],
+    [menuItems]
   );
   const bestSeller = sortedItems[0]?.id;
   const leastSeller = sortedItems[sortedItems.length - 1]?.id;
@@ -53,16 +72,15 @@ export default function Menu() {
       return;
     }
 
-    const initialValues = sortedItems.reduce<Record<string, { name: string; price: string }>>(
-      (acc, item) => {
-        acc[item.id] = {
-          name: item.name ?? "",
-          price: Number(item.price ?? 0).toFixed(2),
-        };
-        return acc;
-      },
-      {},
-    );
+    const initialValues = sortedItems.reduce<
+      Record<string, { name: string; price: string }>
+    >((acc, item) => {
+      acc[item.id] = {
+        name: item.name ?? "",
+        price: Number(item.price ?? 0).toFixed(2),
+      };
+      return acc;
+    }, {});
     setEditedValues(initialValues);
   }, [isEditing, sortedItems]);
 
@@ -74,7 +92,11 @@ export default function Menu() {
     setIsEditing(true);
   };
 
-  const handleEditChange = (id: string, field: "name" | "price", value: string) => {
+  const handleEditChange = (
+    id: string,
+    field: "name" | "price",
+    value: string
+  ) => {
     setEditedValues((prev) => ({
       ...prev,
       [id]: {
@@ -106,13 +128,15 @@ export default function Menu() {
         };
       })
       .filter(
-        (entry): entry is {
+        (
+          entry
+        ): entry is {
           id: string;
           originalName: string;
           originalPrice: number;
           name: string;
           price: number;
-        } => entry !== null,
+        } => entry !== null
       );
 
     for (const entry of updates) {
@@ -137,7 +161,9 @@ export default function Menu() {
 
     const changed = updates.filter(
       (entry) =>
-        entry.name !== entry.originalName || Number(entry.price.toFixed(2)) !== Number(entry.originalPrice.toFixed(2)),
+        entry.name !== entry.originalName ||
+        Number(entry.price.toFixed(2)) !==
+          Number(entry.originalPrice.toFixed(2))
     );
 
     if (changed.length === 0) {
@@ -165,7 +191,9 @@ export default function Menu() {
         }
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["menu-items-with-sales"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["menu-items-with-sales"],
+      });
       await queryClient.invalidateQueries({ queryKey: ["menu-items"] });
 
       toast({
@@ -176,7 +204,8 @@ export default function Menu() {
     } catch (error: any) {
       toast({
         title: "Unable to save edits",
-        description: error?.message || "Something went wrong while updating menu items.",
+        description:
+          error?.message || "Something went wrong while updating menu items.",
         variant: "destructive",
       });
     } finally {
@@ -189,8 +218,12 @@ export default function Menu() {
       <div className="p-8 space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Menu Management</h1>
-            <p className="text-muted-foreground mt-1">Manage your menu items and recipes</p>
+            <h1 className="text-3xl font-bold text-foreground">
+              Menu Management
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage your menu items and recipes
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -213,7 +246,12 @@ export default function Menu() {
               )}
             </Button>
             {isEditing ? (
-              <Button type="button" className="gap-2" onClick={handleSaveEdits} disabled={isSavingEdits}>
+              <Button
+                type="button"
+                className="gap-2"
+                onClick={handleSaveEdits}
+                disabled={isSavingEdits}
+              >
                 {isSavingEdits ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -227,7 +265,11 @@ export default function Menu() {
                 )}
               </Button>
             ) : null}
-            <Button className="gap-2" onClick={() => setIsAddMenuItemOpen(true)} disabled={isEditing || isSavingEdits}>
+            <Button
+              className="gap-2"
+              onClick={() => setIsAddMenuItemOpen(true)}
+              disabled={isEditing || isSavingEdits}
+            >
               <Plus className="h-4 w-4" />
               Add Menu Item
             </Button>
@@ -237,7 +279,9 @@ export default function Menu() {
         <Card>
           <CardHeader>
             <CardTitle>Menu Items</CardTitle>
-            <CardDescription>View and manage all your menu items</CardDescription>
+            <CardDescription>
+              View and manage all your menu items
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -245,7 +289,7 @@ export default function Menu() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead className="text-center">Price</TableHead>
-                  <TableHead className="text-center">Trend</TableHead>
+                  <TableHead className="text-center w-20">Trend</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
@@ -257,7 +301,13 @@ export default function Menu() {
                       {isEditing ? (
                         <Input
                           value={editedValues[item.id]?.name ?? ""}
-                          onChange={(event) => handleEditChange(item.id, "name", event.target.value)}
+                          onChange={(event) =>
+                            handleEditChange(
+                              item.id,
+                              "name",
+                              event.target.value
+                            )
+                          }
                           disabled={isSavingEdits}
                           placeholder="Menu item name"
                         />
@@ -272,7 +322,13 @@ export default function Menu() {
                           min="0"
                           step="0.01"
                           value={editedValues[item.id]?.price ?? ""}
-                          onChange={(event) => handleEditChange(item.id, "price", event.target.value)}
+                          onChange={(event) =>
+                            handleEditChange(
+                              item.id,
+                              "price",
+                              event.target.value
+                            )
+                          }
                           className="text-center"
                           disabled={isSavingEdits}
                           placeholder="0.00"
@@ -281,11 +337,11 @@ export default function Menu() {
                         `$${Number(item.price).toFixed(2)}`
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center w-20">
                       {index < sortedItems.length / 2 ? (
-                        <TrendingUp className="h-5 w-5 text-success" />
+                        <TrendingUp className="h-5 w-5 text-success mx-auto" />
                       ) : (
-                        <TrendingDown className="h-5 w-5 text-warning" />
+                        <TrendingDown className="h-5 w-5 text-warning mx-auto" />
                       )}
                     </TableCell>
                     <TableCell className="text-center">
@@ -300,7 +356,9 @@ export default function Menu() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setActiveMenuItem({ id: item.id, name: item.name })}
+                        onClick={() =>
+                          setActiveMenuItem({ id: item.id, name: item.name })
+                        }
                         disabled={isEditing}
                       >
                         Add Recipe

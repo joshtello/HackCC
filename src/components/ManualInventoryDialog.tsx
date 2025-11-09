@@ -33,8 +33,13 @@ type ManualInventoryDialogProps = {
   items: ManualInventoryRow[];
   onSave: (updatedItems: ManualInventoryRow[]) => Promise<void> | void;
   onTeachAI?: (
-    corrections: Array<{ id: string; originalQuantity: number; correctedQuantity: number }>
+    corrections: Array<{
+      id: string;
+      originalQuantity: number;
+      correctedQuantity: number;
+    }>
   ) => void;
+  onDraftChange?: (drafts: { id: string; currentQuantity: number }[]) => void;
 };
 
 type DraftRow = ManualInventoryRow & { draftQuantity: string };
@@ -45,6 +50,7 @@ export function ManualInventoryDialog({
   items,
   onSave,
   onTeachAI,
+  onDraftChange,
 }: ManualInventoryDialogProps) {
   const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -64,19 +70,37 @@ export function ManualInventoryDialog({
     }));
     setDraftRows(normalized);
     setErrorMessage(null);
+    // notify parent of initial draft values
+    if (onDraftChange) {
+      onDraftChange(
+        normalized.map((r) => ({
+          id: r.id,
+          currentQuantity: Number(r.draftQuantity),
+        }))
+      );
+    }
   }, [open, items]);
 
   const handleQuantityChange = (id: string, value: string) => {
-    setDraftRows((prev) =>
-      prev.map((row) =>
+    setDraftRows((prev) => {
+      const next = prev.map((row) =>
         row.id === id
           ? {
               ...row,
               draftQuantity: value,
             }
-          : row,
-      ),
-    );
+          : row
+      );
+      if (onDraftChange) {
+        onDraftChange(
+          next.map((r) => ({
+            id: r.id,
+            currentQuantity: Number(r.draftQuantity),
+          }))
+        );
+      }
+      return next;
+    });
   };
 
   const handleCancel = () => {
@@ -90,10 +114,14 @@ export function ManualInventoryDialog({
       currentQuantity: Number(row.draftQuantity),
     }));
 
-    const invalidRow = parsed.find((row) => Number.isNaN(row.currentQuantity) || row.currentQuantity < 0);
+    const invalidRow = parsed.find(
+      (row) => Number.isNaN(row.currentQuantity) || row.currentQuantity < 0
+    );
 
     if (invalidRow) {
-      setErrorMessage("Please enter valid non-negative numbers for all quantities.");
+      setErrorMessage(
+        "Please enter valid non-negative numbers for all quantities."
+      );
       return;
     }
 
@@ -121,8 +149,8 @@ export function ManualInventoryDialog({
         <DialogHeader>
           <DialogTitle>Manual Inventory Update</DialogTitle>
           <DialogDescription>
-            Review the AI estimated stock levels and enter the corrected quantities. Your updates help
-            keep inventory accurate.
+            Review the AI estimated stock levels and enter the corrected
+            quantities. Your updates help keep inventory accurate.
           </DialogDescription>
         </DialogHeader>
 
@@ -133,7 +161,9 @@ export function ManualInventoryDialog({
                 <TableRow>
                   <TableHead>Ingredient</TableHead>
                   <TableHead className="text-center">AI Estimate</TableHead>
-                  <TableHead className="text-center">Corrected Quantity</TableHead>
+                  <TableHead className="text-center">
+                    Corrected Quantity
+                  </TableHead>
                   <TableHead className="text-center">Unit</TableHead>
                 </TableRow>
               </TableHeader>
@@ -150,7 +180,9 @@ export function ManualInventoryDialog({
                         min="0"
                         step="0.01"
                         value={row.draftQuantity}
-                        onChange={(event) => handleQuantityChange(row.id, event.target.value)}
+                        onChange={(event) =>
+                          handleQuantityChange(row.id, event.target.value)
+                        }
                       />
                     </TableCell>
                     <TableCell className="text-center">{row.unit}</TableCell>
@@ -158,7 +190,10 @@ export function ManualInventoryDialog({
                 ))}
                 {draftRows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground"
+                    >
                       No inventory items available.
                     </TableCell>
                   </TableRow>
@@ -167,7 +202,9 @@ export function ManualInventoryDialog({
             </Table>
           </div>
         </div>
-        {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p className="text-sm text-destructive">{errorMessage}</p>
+        ) : null}
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
@@ -181,4 +218,3 @@ export function ManualInventoryDialog({
     </Dialog>
   );
 }
-

@@ -71,3 +71,21 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Inventory baselines
+
+The ingredient quantities displayed on the Inventory page fall back to **Jan-Jun 2023 Manhattan POS data** (`public/data/coffee-sales-manhattan.json`) whenever Supabase does not have explicit numbers. The calculations live in `src/data/inventory-baselines.ts` and assume 14 days of average demand on hand with a 7-day reorder threshold.
+
+| Ingredient | Quantity | Threshold | Unit | Basis |
+| --- | --- | --- | --- | --- |
+| Chai Tea Bag | 630 | 315 | Bags | Brewed Chai tea orders, 1 bag each |
+| Chocolate Powder | 10,500 | 5,250 | G | 25g per Hot chocolate serving |
+| Coffee Beans | 36,000 | 18,000 | G | 18g per espresso, 15g per brewed coffee |
+| Cups | 4,450 | 2,225 | Cup | All beverages (coffee, tea, drinking chocolate) |
+| Ice | 280,000 | 140,000 | G | 35% of drinks iced, 180g ice per iced drink (NCA 2023) |
+| Matcha Powder | 260 | 130 | G | Approximated as 40% of Brewed Green tea orders at 3g each |
+| Milk | 221,000 | 110,500 | ml | Milk-heavy drinks use 200ml per cup |
+| Tea Bag | 1,125 | 560 | Bag | Brewed Black, Herbal, and Green tea orders |
+| Water | 1,068,000 | 534,000 | ml | 240ml of filtered water per beverage |
+
+Update the baseline file if you ingest a different sales window or want to tweak the consumption assumptions.
