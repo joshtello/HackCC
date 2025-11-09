@@ -4,6 +4,9 @@ import { AlertCircle, TrendingUp, TrendingDown, Package, Loader2 } from "lucide-
 import { Badge } from "@/components/ui/badge";
 import { useLowStockIngredients, useIngredients } from "@/hooks/useIngredients";
 import { useMenuItems, useMenuItemWithSales } from "@/hooks/useMenuItems";
+import { useTopSellersFromExcel } from "@/hooks/useTopSellersFromExcel";
+import { useState } from "react";
+import { useSalesBasedPrediction } from "@/hooks/useSalesBasedPrediction";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function Dashboard() {
@@ -11,6 +14,7 @@ export default function Dashboard() {
   const { data: ingredients, isLoading: loadingIngredients } = useIngredients();
   const { data: menuItems, isLoading: loadingMenu } = useMenuItems();
   const { data: menuWithSales, isLoading: loadingSales } = useMenuItemWithSales();
+  const { data: excelTopSellers, isLoading: loadingExcelTop } = useTopSellersFromExcel(7);
 
   const inventoryValue = Math.max(
     (ingredients ?? []).reduce((sum, item) => {
@@ -47,21 +51,22 @@ export default function Dashboard() {
     },
   ];
 
-  const topSellers = menuWithSales
-    ?.sort((a, b) => b.sales - a.sales)
-    .slice(0, 3)
-    .map((item, index) => ({
-      name: item.name,
-      sales: item.sales,
-      trend: index < 2 ? "up" : "down"
-    })) || [];
+  const topSellers = (excelTopSellers || []).map((item, index) => ({
+    name: item.name,
+    sales: item.sales,
+    trend: index < 2 ? "up" : "down"
+  }));
 
-  const predictedItems = [
-    { id: 1, name: "Coffee Beans", quantity: 100, unit: "kg", price: 500 },
-    { id: 2, name: "Milk", quantity: 50, unit: "liters", price: 100 },
-    { id: 3, name: "Sugar", quantity: 30, unit: "kg", price: 60 },
-    { id: 4, name: "Chocolate Syrup", quantity: 20, unit: "liters", price: 80 },
-  ];
+  // Sales-based inventory prediction
+  const [dateRange, setDateRange] = useState("1");
+  const daysMap: { [key: string]: number } = {
+    "1": 1,
+    "3": 3,
+    "7": 7,
+    "30": 30
+  };
+  const days = daysMap[dateRange] || 1;
+  const { data: predictedItems, isLoading: predicting, error: predictionError } = useSalesBasedPrediction(days);
 
   if (loadingLowStock || loadingMenu || loadingSales) {
     return (
@@ -143,43 +148,67 @@ export default function Dashboard() {
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Inventory Prediction
               </CardTitle>
-              <CardDescription>AI-powered inventory forecasting based on sales history</CardDescription>
+              <CardDescription>Forecasting based on past 30 days sales from Coffee Shop Sales.xlsx</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label htmlFor="date-range" className="text-sm font-medium text-foreground">Select Date Range:</label>
-                  <select id="date-range" className="p-2 border rounded-md">
-                    <option value="next-day">Next Day</option>
-                    <option value="next-3-days">Next 3 Days</option>
-                    <option value="next-week">Next Week</option>
-                    <option value="next-month">Next Month</option>
+                  <select
+                    id="date-range"
+                    className="p-2 border rounded-md"
+                    value={dateRange}
+                    onChange={e => setDateRange(e.target.value)}
+                  >
+                    <option value="1">Next 1 Day</option>
+                    <option value="3">Next 3 Days</option>
+                    <option value="7">Next 7 Days</option>
+                    <option value="30">Next 30 Days</option>
                   </select>
                 </div>
                 <div className="mt-4">
                   <p className="text-sm text-muted-foreground">Predicted Inventory:</p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ingredient</TableHead>
-                        <TableHead className="text-center">Quantity</TableHead>
-                        <TableHead className="text-center">Unit</TableHead>
-                        <TableHead className="text-center">Price</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {predictedItems.sort((a, b) => b.quantity - a.quantity).map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-center">{item.quantity}</TableCell>
-                          <TableCell className="text-center">{item.unit}</TableCell>
-                          <TableCell className="text-center">${item.price.toFixed(2)}</TableCell>
+                  {predictionError && (
+                    <div className="text-red-500 text-sm mb-2">{predictionError.message || "Prediction failed"}</div>
+                  )}
+                  {predicting ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" /> Predicting...
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Ingredient</TableHead>
+                          <TableHead className="text-center">Quantity</TableHead>
+                          <TableHead className="text-center">Unit</TableHead>
+                          <TableHead className="text-center">Price</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {predictedItems && predictedItems.length > 0 ? (
+                          predictedItems.sort((a, b) => b.quantity - a.quantity).map((item, idx) => (
+                            <TableRow key={item.id || idx}>
+                              <TableCell className="font-medium">{item.name}</TableCell>
+                              <TableCell className="text-center">{item.quantity}</TableCell>
+                              <TableCell className="text-center">{item.unit}</TableCell>
+                              <TableCell className="text-center">{item.price !== undefined ? `$${item.price.toFixed(2)}` : '-'}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground py-4">
+                              No prediction data available.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                   <div className="mt-4 text-right">
-                    <p className="text-sm font-medium text-foreground">Total Cost: ${predictedItems.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      Total Cost: ${(predictedItems || []).reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0).toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -197,7 +226,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {topSellers.length > 0 ? (
+                {loadingExcelTop ? (
+                  <div className="flex items-center justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary" /> Loading top sellers...</div>
+                ) : topSellers.length > 0 ? (
                   topSellers.map((item, index) => (
                     <div key={item.name} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                       <div className="flex items-center gap-3">
