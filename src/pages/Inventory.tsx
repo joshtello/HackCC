@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useIngredients, useLowStockIngredients } from "@/hooks/useIngredients";
+import { useQueryClient } from "@tanstack/react-query";
 import { AddIngredientDialog } from "@/components/AddIngredientDialog";
 import { ManualInventoryDialog } from "@/components/ManualInventoryDialog";
 import { useToast } from "@/components/ui/use-toast";
@@ -47,6 +48,20 @@ export default function Inventory() {
   const [editingThresholdValue, setEditingThresholdValue] =
     useState<string>("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Keep the low-stock query in sync with local manualInventory (including drafts)
+  // so the Dashboard reflects status changes immediately while editing.
+  useEffect(() => {
+    if (!manualInventory) return;
+    const low = manualInventory.filter((item) => {
+      const q = Math.max(Number(item.current_quantity) || 0, 0);
+      const t = Math.max(Number(item.threshold_quantity) || 0, 1);
+      return q < t;
+    });
+    // Update the react-query cache so consumers (Dashboard) see the change instantly
+    queryClient.setQueryData(["low-stock-ingredients"], low);
+  }, [manualInventory, queryClient]);
 
   useEffect(() => {
     if (inventoryItems) {
@@ -162,24 +177,18 @@ export default function Inventory() {
     );
 
     try {
-      await fetch("/api/inventory/update", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          updates: updatedItems.map((item) => ({
-            id: item.id,
-            current_quantity: item.currentQuantity,
-          })),
-        }),
-      }).catch(() => {
-        // Endpoint is optional; swallow network errors for now.
-      });
-    } finally {
+      // Local-only mode: we already applied optimistic updates to `manualInventory` above.
+      // Do not call the backend; simply show success to the user.
       toast({
-        title: "Inventory updated successfully",
-        description: "Your manual corrections have been saved.",
+        title: "Inventory updated (local)",
+        description: "Manual corrections applied locally.",
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: "Update failed",
+        description: "Could not apply manual inventory changes locally.",
+        variant: "destructive",
       });
     }
   };
@@ -238,23 +247,16 @@ export default function Inventory() {
     setEditingThresholdValue("");
 
     try {
-      await fetch("/api/inventory/update", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          updates: [{ id: item.id, threshold_quantity: parsed }],
-        }),
-      }).catch(() => {});
-
+      // Local-only: threshold updated optimistically above. Show confirmation.
       toast({
-        title: "Threshold updated",
+        title: "Threshold updated (local)",
         description: `Updated ${item.name} threshold to ${parsed} ${item.unit}`,
       });
     } catch (e) {
       console.error(e);
       toast({
         title: "Update failed",
-        description: "Could not save threshold — please try again.",
+        description: "Could not apply threshold change locally.",
       });
     }
   };
@@ -280,23 +282,16 @@ export default function Inventory() {
     setEditingValue("");
 
     try {
-      await fetch("/api/inventory/update", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          updates: [{ id: item.id, current_quantity: parsed }],
-        }),
-      }).catch(() => {});
-
+      // Local-only: quantity already updated optimistically above.
       toast({
-        title: "Quantity updated",
+        title: "Quantity updated (local)",
         description: `Updated ${item.name} to ${parsed} ${item.unit}`,
       });
     } catch (e) {
       console.error(e);
       toast({
         title: "Update failed",
-        description: "Could not save quantity — please try again.",
+        description: "Could not apply quantity change locally.",
       });
     }
   };

@@ -13,7 +13,11 @@ export function useIngredients() {
       if (error) throw error;
       return (data || []).map((item) => {
         const current = Math.max(Number(item.current_quantity) || 0, 0);
-        const threshold = Math.max(Number(item.threshold_quantity) || 0, 0);
+        const rawThreshold = Number(item.threshold_quantity) || 0;
+        const threshold =
+          rawThreshold > 0
+            ? rawThreshold
+            : Math.max(Math.ceil(current * 0.5), 1);
         const rawCost = Number(item.cost_per_unit) || 0;
         const name = (item.name || "").toLowerCase();
         const unitOverride =
@@ -54,7 +58,11 @@ export function useLowStockIngredients() {
       return (data || [])
         .map((item) => {
           const current = Math.max(Number(item.current_quantity) || 0, 0);
-          const threshold = Math.max(Number(item.threshold_quantity) || 0, 0);
+          const rawThreshold = Number(item.threshold_quantity) || 0;
+          const threshold =
+            rawThreshold > 0
+              ? rawThreshold
+              : Math.max(Math.ceil(current * 0.5), 1);
           const rawCost = Number(item.cost_per_unit) || 0;
           const name = (item.name || "").toLowerCase();
           const unitOverride =

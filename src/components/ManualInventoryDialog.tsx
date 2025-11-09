@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import {
   Dialog,
@@ -55,6 +55,57 @@ export function ManualInventoryDialog({
   const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const autosaveTimers = useRef<Record<string, number>>({});
+
+  const clearAllAutosaveTimers = () => {
+    Object.values(autosaveTimers.current).forEach((t) =>
+      window.clearTimeout(t)
+    );
+    autosaveTimers.current = {};
+  };
+
+  const autoSaveRow = async (id: string) => {
+    const row = draftRows.find((r) => r.id === id);
+    if (!row) return;
+    const parsedRow: ManualInventoryRow = {
+      id: row.id,
+      name: row.name,
+      unit: row.unit,
+      aiQuantity: row.aiQuantity,
+      currentQuantity: Number(row.draftQuantity),
+    };
+
+    // basic validation
+    if (
+      Number.isNaN(parsedRow.currentQuantity) ||
+      parsedRow.currentQuantity < 0
+    ) {
+      setErrorMessage(
+        "Please enter valid non-negative numbers for all quantities."
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSave([parsedRow]);
+      setErrorMessage(null);
+      if (onTeachAI) {
+        onTeachAI([
+          {
+            id: parsedRow.id,
+            originalQuantity: parsedRow.aiQuantity,
+            correctedQuantity: parsedRow.currentQuantity,
+          },
+        ]);
+      }
+    } catch (e: any) {
+      console.error(e);
+      setErrorMessage("Auto-save failed. Please try saving manually.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) {
@@ -99,12 +150,36 @@ export function ManualInventoryDialog({
           }))
         );
       }
+
+      // debounce autosave for this row
+      if (autosaveTimers.current[id]) {
+        window.clearTimeout(autosaveTimers.current[id]);
+      }
+      autosaveTimers.current[id] = window.setTimeout(() => {
+        // call autoSaveRow but don't block state update
+        void autoSaveRow(id);
+        delete autosaveTimers.current[id];
+      }, 1500);
       return next;
     });
   };
 
   const handleCancel = () => {
     setErrorMessage(null);
+    // if there are unsaved edits, confirm with the user
+    const hasUnsaved = draftRows.some(
+      (r) => Number(r.draftQuantity) !== Number(r.currentQuantity)
+    );
+    if (hasUnsaved) {
+      const confirmDiscard = window.confirm(
+        "You have unsaved changes. Save before closing? Press OK to save, Cancel to discard."
+      );
+      if (confirmDiscard) {
+        void handleSave();
+        return;
+      }
+    }
+    clearAllAutosaveTimers();
     onOpenChange(false);
   };
 
@@ -127,6 +202,8 @@ export function ManualInventoryDialog({
 
     setIsSaving(true);
     try {
+      // clear pending autosaves before explicit save
+      clearAllAutosaveTimers();
       await onSave(parsed);
       setErrorMessage(null);
       if (onTeachAI) {
